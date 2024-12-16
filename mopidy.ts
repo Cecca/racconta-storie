@@ -63,11 +63,11 @@ async function tracklist_replace(uri) {
 
 
 async function main() {
-  // const resp = await spotify_playlists();
-  // console.log(await resp.json());
+  const resp = await spotify_playlists();
+  console.log(await resp.json());
 
-  tracklist_replace("spotify:playlist:6xTlGGHLMSJIkkdAGmIgOE");
-  playback_play();
+  // tracklist_replace("spotify:playlist:6xTlGGHLMSJIkkdAGmIgOE");
+  // playback_play();
 }
 
 main();
