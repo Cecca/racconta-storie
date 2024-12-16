@@ -18,7 +18,7 @@ def rpc(method, params=None):
     req = ureq.Request(URL)
     req.add_header('Content-Type', 'application/json')
     response = ureq.urlopen(req, msg)
-    return json.loads(response.read())
+    return json.loads(response.read())["result"]
 
 
 def play():
@@ -35,7 +35,7 @@ def toggle_play():
     print("Toggle play")
     resp = rpc("core.playback.get_state")
     print(resp)
-    if resp["result"] == "paused":
+    if resp == "paused":
         play()
     else:
         pause()
@@ -55,12 +55,21 @@ def record():
     print("Record")
 
 
+def change_volume(amount):
+    prev_volume = int(rpc("core.mixer.get_volume"))
+    new_volume = prev_volume + amount
+    new_volume = max(0, min(100, new_volume))
+    rpc("core.mixer.set_volume", {"volume": new_volume})
+
+
 def vol_up():
     print("Volume up")
+    change_volume(10)
 
 
 def vol_down():
     print("Volume down")
+    change_volume(-10)
 
 
 button_play = Button(10)

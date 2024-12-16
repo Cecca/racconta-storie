@@ -1,5 +1,18 @@
 const URL = "http://192.168.1.71:6680/mopidy/rpc"
 
+async function rpc(method, params) {
+  const resp = await fetch(URL, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      "jsonrpc": "2.0", "id": 1, 
+      "method": method,
+      "params": params
+    })
+  });
+  return resp.json()
+}
+
 async function playback_interaction(what) {
   const bod = JSON.stringify({
       "jsonrpc": "2.0", "id": 1, "method": "core.playback." + what
@@ -43,6 +56,17 @@ async function tracklist_clear() {
 }
 
 async function tracklist_add(uri) {
+  let uris = [];
+  if (uri.startsWith("m3u")) {
+    const resp = await rpc("core.playlists.get_items", [uri]);
+    const res = resp.result;
+    for (const ans in res) {
+      uris.push(res[ans].uri);
+    }
+  } else {
+    uris.push(uri);
+  }
+  console.log(uris)
   return await fetch(URL, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
@@ -50,15 +74,17 @@ async function tracklist_add(uri) {
       "jsonrpc": "2.0", "id": 1, 
       "method": "core.tracklist.add",
       "params": {
-        "uris": [uri]
+        "uris": uris
       }
     })
   });
 }
 
 async function tracklist_replace(uri) {
+  console.log("replacing playlist");
   await tracklist_clear();
-  await tracklist_add(uri);
+  const resp = await tracklist_add(uri);
+  console.log(await resp.json());
 }
 
 
@@ -67,7 +93,9 @@ async function main() {
   console.log(await resp.json());
 
   // tracklist_replace("spotify:playlist:6xTlGGHLMSJIkkdAGmIgOE");
-  // playback_play();
+  await tracklist_replace("m3u:Favole_al_telefono.m3u8");
+  // await tracklist_replace("local:track:Favole_al_telefono_1.mp3");
+  playback_play();
 }
 
 main();
