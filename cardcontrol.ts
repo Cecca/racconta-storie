@@ -1,29 +1,24 @@
 import { Database } from "jsr:@db/sqlite@0.12";
-import { TextLineStream } from "jsr:@std/streams";
-
-const globalState = {};
+import { playback_play, tracklist_replace } from "./mopidy.ts";
 
 // Setup the database
-const db = new Database("test.db");
+const db = new Database("raccontastorie.db");
 db.prepare(
   `
-	CREATE TABLE IF NOT EXISTS audiofiles (
-	  key TEXT PRIMARY KEY,
-	  title TEXT,
-	  path TEXT
+	CREATE TABLE IF NOT EXISTS cards (
+	  card_id TEXT PRIMARY KEY,
+	  mopidy_uri TEXT
+	);
+`).run();
+
+db.prepare(`
+	CREATE TABLE IF NOT EXISTS last_card (
+	  rowid INT PRIMARY KEY,
+	  last_card TEXT
 	);
   `,
 ).run();
 
-// db.prepare(
-//   `
-// 	INSERT INTO audiofiles (key, title, path) VALUES (?, ?, ?);
-//   `,
-// ).run("0014437885", "Favole al telefono", "audio/2724044.mp3");
-
-function playAudio(path: string) {
-  return new Deno.Command("mpv", {args: [path]}).spawn();
-}
 
 class InputEvent {
   seconds: number;
@@ -77,27 +72,25 @@ async function *keyStream(path: string) {
   }
 }
 
-async function playFromCards(path: string) {
+export async function readCards(path: string) {
   for await (const key of keyStream(path)) {
     const rows = db.prepare(
       `
-        SELECT key, title, path FROM audiofiles
-        WHERE key = ?;
+        SELECT card_id, mopidy_uri FROM cards
+        WHERE card_id = ?;
       `
     ).all(key);
 
     if (rows.length > 0) {
       const entry = rows[0];
-      if ("currentPlay" in globalState) {
-        console.log("stop previous play");
-        await globalState["currentPlay"].kill();
-      }
-
-      console.log("playing " + entry["title"]);
-      const handle = playAudio(entry["path"]);
-      globalState["currentPlay"] = handle;
+      await tracklist_replace(entry["mopidy_uri"]);
+      await playback_play();
     } else {
       console.warn("missing entry for key " + key);
+      db.prepare(`
+         INSERT OR REPLACE INTO last_card (rowid, last_card)
+         VALUES (0, ?)
+      `).run(key);
     }
   }
 }
@@ -105,6 +98,6 @@ async function playFromCards(path: string) {
 if (import.meta.main) {
   let kbd = "/dev/input/by-id/usb-HXGCoLtd_27db-event-kbd";
 
-  await playFromCards(kbd);
+  await readCards(kbd);
 
 }
