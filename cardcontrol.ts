@@ -83,6 +83,9 @@ export async function readCards(path: string) {
 
     if (rows.length > 0) {
       const entry = rows[0];
+      await Deno.writeTextFile("/home/pi/.state", "mopidy");
+      await new Deno.Command("pkill", {args: ["arecord"]}).spawn().status;
+      await new Deno.Command("pkill", {args: ["aplay"]}).spawn().status;
       await tracklist_replace(entry["mopidy_uri"]);
       await playback_play();
     } else {
