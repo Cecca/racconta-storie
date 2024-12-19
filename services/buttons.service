@@ -1,0 +1,11 @@
+[Unit]
+Description=Button controls for racconta storie
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/racconta-storie
+ExecStart=/usr/bin/python3 buttons.py
+
+[Install]
+WantedBy=default.target

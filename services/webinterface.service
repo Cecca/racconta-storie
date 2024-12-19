@@ -1,0 +1,11 @@
+[Unit]
+Description=Web interface for raccontastorie
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/racconta-storie
+ExecStart=%h/.deno/bin/deno run -A dev.ts 
+
+[Install]
+WantedBy=default.target
