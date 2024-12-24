@@ -1,4 +1,4 @@
-const URL = "http://192.168.1.71:6680/mopidy/rpc"
+const URL = "http://localhost:6680/mopidy/rpc"
 
 async function rpc(method, params) {
   const resp = await fetch(URL, {

@@ -8,7 +8,7 @@ import time
 import datetime
 
 
-URL = "http://192.168.1.71:6680/mopidy/rpc"
+URL = "http://localhost:6680/mopidy/rpc"
 STATE_FILE = os.path.expanduser("~/.state")
 PLAYER_PROCESS = None
 RECORD_PROCESS = None
@@ -83,7 +83,7 @@ def toggle_play():
             return
 
         PLAYER_PROCESS = sp.Popen([
-            "mpv", last_recording
+            "aplay", last_recording
         ])
 
     else:
@@ -124,7 +124,7 @@ def record():
     print("Start record process")
     RECORD_PROCESS = sp.Popen(
         ["arecord", 
-         "-D", "hw:3,0", 
+         "-D", "hw:1,0", 
          "-f", "S16_LE", 
          "-r", "44100",
          "--duration", str(timeout),
