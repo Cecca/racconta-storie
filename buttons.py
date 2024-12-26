@@ -101,6 +101,16 @@ def previous():
     resp = rpc("core.playback.previous")
 
 
+def get_recording_device():
+    proc = sp.run(["arecord", "-l"], capture_output=True)
+    out = proc.stdout.decode()
+    for line in out.splitlines():
+        if line.startswith("card"):
+            tokens = line.split()
+            num = tokens[1].replace(":", "")
+            return "hw:{},0".format(num)
+
+
 def record():
     print("Record")
     global RECORD_PROCESS
@@ -124,7 +134,7 @@ def record():
     print("Start record process")
     RECORD_PROCESS = sp.Popen(
         ["arecord", 
-         "-D", "hw:1,0", 
+         "-D", get_recording_device(), # "hw:1,0", 
          "-f", "S16_LE", 
          "-r", "44100",
          "--duration", str(timeout),
@@ -149,24 +159,37 @@ def vol_down():
     change_volume(-10)
 
 
-button_play = Button(10)
-button_play.when_pressed = toggle_play
+def is_active():
+    resp = rpc("core.playback.get_state")
+    mopidy_active = resp != "stopped" and resp != "paused"
+    recorder_active = RECORD_PROCESS is not None 
+    record_player_active = PLAYER_PROCESS is not None 
+    return mopidy_active or recorder_active or record_player_active
 
-button_next = Button(27)
-button_next.when_pressed = next
 
-button_prev = Button(21)
-button_prev.when_pressed = previous
-    
-button_vol_up = Button(3)
-button_vol_up.when_pressed = vol_up
+def main():
+    button_play = Button(10)
+    button_play.when_pressed = toggle_play
 
-button_vol_down = Button(15)
-button_vol_down.when_pressed = vol_down
+    button_next = Button(27)
+    button_next.when_pressed = next
 
-button_record = Button(16, bounce_time=0.05)
-button_record.when_pressed = record
+    button_prev = Button(21)
+    button_prev.when_pressed = previous
+        
+    button_vol_up = Button(3)
+    button_vol_up.when_pressed = vol_up
 
-print("Waiting for signal")
-signal.pause() # wait for a signal
- 
+    button_vol_down = Button(15)
+    button_vol_down.when_pressed = vol_down
+
+    button_record = Button(16, bounce_time=0.05)
+    button_record.when_pressed = record
+
+    print("Waiting for signal")
+    signal.pause() # wait for a signal
+     
+
+
+if __name__ == "__main__":
+    main()

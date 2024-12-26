@@ -1,0 +1,11 @@
+[Unit]
+Description=Button controls for racconta storie
+After=mopidy.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/racconta-storie
+ExecStart=/usr/bin/mpv logo.wav
+
+[Install]
+WantedBy=default.target

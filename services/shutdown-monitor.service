@@ -1,0 +1,11 @@
+[Unit]
+Description=Monitor to shut down the system after inactivity
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/racconta-storie
+ExecStart=/usr/bin/python3 shutdown.py
+
+[Install]
+WantedBy=default.target
